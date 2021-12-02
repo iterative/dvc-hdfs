@@ -51,4 +51,4 @@ def hash_value():
 
 @pytest.fixture
 def dir_hash_value(dir_md5):
-    raise NotImplementedError
+    pytest.skip("external outputs are broken for hdfs dirs")
