@@ -31,7 +31,7 @@ class TestImportHDFS(TestImport):
 
     @pytest.fixture
     def dir_md5(self):
-        return "e6dcd267966dc628d732874f94ef4280.dir"
+        pytest.skip("https://github.com/iterative/dvc-hdfs/issues/2")
 
     @pytest.fixture
     def is_object_storage(self):
