@@ -3,28 +3,21 @@ from dvc.testing.test_api import TestAPI  # noqa, pylint: disable=unused-import
 from dvc.testing.test_remote import (  # noqa, pylint: disable=unused-import
     TestRemote,
 )
-from dvc.testing.test_workspace import (  # noqa, pylint: disable=unused-import
-    TestAdd,
-    TestImport,
-)
+from dvc.testing.test_workspace import TestAdd as _TestAdd
+from dvc.testing.test_workspace import TestImport as _TestImport
 
 
 @pytest.fixture
-def cloud_name():
-    return "hdfs"
+def remote(make_remote):
+    yield make_remote(name="upstream", typ="hdfs")
 
 
 @pytest.fixture
-def remote(make_remote, cloud_name):
-    yield make_remote(name="upstream", typ=cloud_name)
+def workspace(make_workspace):
+    yield make_workspace(name="workspace", typ="hdfs")
 
 
-@pytest.fixture
-def workspace(make_workspace, cloud_name):
-    yield make_workspace(name="workspace", typ=cloud_name)
-
-
-class TestImportHDFS(TestImport):
+class TestImport(_TestImport):
     @pytest.fixture
     def stage_md5(self):
         return "ec0943f83357f702033c98e70b853c8c"
@@ -38,7 +31,7 @@ class TestImportHDFS(TestImport):
         return False
 
 
-class TestAddHDFS(TestAdd):
+class TestAdd(_TestAdd):
     @pytest.fixture
     def hash_name(self):
         return "checksum"
