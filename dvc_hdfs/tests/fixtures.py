@@ -14,7 +14,7 @@ _hdfs_root = TemporaryDirectory()
 
 
 @pytest.fixture(scope="session")
-def docker_compose_file(pytestconfig):
+def docker_compose_file():
     return os.path.join(os.path.dirname(__file__), "docker-compose.yml")
 
 
@@ -71,7 +71,11 @@ def hadoop():
 
 
 @pytest.fixture(scope="session")
-def hdfs_server(hadoop, docker_compose, docker_services):
+def hdfs_server(
+    hadoop,  # pylint: disable=redefined-outer-name,unused-argument
+    docker_compose,  # pylint: disable=unused-argument
+    docker_services,
+):
     import pyarrow.fs
 
     port = docker_services.port_for("hdfs", 8020)
@@ -102,7 +106,7 @@ def hdfs_server(hadoop, docker_compose, docker_services):
 
 
 @pytest.fixture
-def real_hdfs(hdfs_server):
+def real_hdfs(hdfs_server):  # pylint: disable=redefined-outer-name
     port = hdfs_server["hdfs"]
     url = f"hdfs://127.0.0.1:{port}/{uuid.uuid4()}"
     yield HDFS(url)
@@ -245,5 +249,5 @@ def make_hdfs(mocker):
 
 
 @pytest.fixture
-def hdfs(make_hdfs):
+def hdfs(make_hdfs):  # pylint: disable=redefined-outer-name
     return make_hdfs()
