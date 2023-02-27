@@ -73,7 +73,6 @@ def hadoop():
 @pytest.fixture(scope="session")
 def hdfs_server(
     hadoop,  # pylint: disable=redefined-outer-name,unused-argument
-    docker_compose,  # pylint: disable=unused-argument
     docker_services,
 ):
     import pyarrow.fs
