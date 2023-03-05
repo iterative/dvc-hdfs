@@ -182,6 +182,9 @@ class FakeHadoopFileSystem:
     def open_input_stream(self, path, **kwargs):
         return self._fs.open_input_stream(self._path(path), **kwargs)
 
+    def open_input_file(self, path, **kwargs):
+        return self._fs.open_input_file(self._path(path), **kwargs)
+
     def open_output_stream(self, path, **kwargs):
         import posixpath
 
