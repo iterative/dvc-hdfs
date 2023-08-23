@@ -5,7 +5,6 @@ from dvc.testing.api_tests import (  # noqa, pylint: disable=unused-import
 from dvc.testing.remote_tests import (  # noqa, pylint: disable=unused-import
     TestRemote,
 )
-from dvc.testing.workspace_tests import TestAdd as _TestAdd
 from dvc.testing.workspace_tests import (  # noqa, pylint: disable=unused-import
     TestGetUrl,
 )
@@ -37,17 +36,3 @@ class TestImport(_TestImport):
     @pytest.fixture
     def is_object_storage(self):
         return False
-
-
-class TestAdd(_TestAdd):
-    @pytest.fixture
-    def hash_name(self):
-        return "checksum"
-
-    @pytest.fixture
-    def hash_value(self):
-        return "000002000000000000000000a86fe4d846edc1bf4c355cb6112f141e"
-
-    @pytest.fixture
-    def dir_hash_value(self):
-        pytest.skip("external outputs are broken for hdfs dirs")
