@@ -215,7 +215,7 @@ class FakeHadoopFileSystem:
         mocked_path = os.path.relpath(entry.path, self._root)
         mocked_parts = mocked_path.split(os.path.sep)
         return FileInfo(
-            path=posixpath.join(*mocked_parts),
+            path=posixpath.join("/", *mocked_parts),
             type=entry.type,
             mtime=entry.mtime,
             size=entry.size,
