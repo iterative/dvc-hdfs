@@ -4,8 +4,9 @@ import subprocess
 import sys
 import threading
 
+from dvc.utils.objects import cached_property
 from dvc_objects.fs.base import FileSystem
-from funcy import cached_property, wrap_prop
+from funcy import wrap_prop
 
 CHECKSUM_REGEX = re.compile(r".*\t.*\t(?P<checksum>.*)")
 
