@@ -55,6 +55,12 @@ class HDFS(Cloud, URLInfo):  # pylint: disable=abstract-method
             with _hdfs.open_input_stream(self.path) as fobj:
                 return fobj.read()
 
+    def unlink(self, missing_ok: bool = False) -> None:
+        raise NotImplementedError
+
+    def rmdir(self, recursive: bool = True) -> None:
+        raise NotImplementedError
+
     @property
     def fs_path(self):
         return self.path.lstrip("/")
