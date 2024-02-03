@@ -63,7 +63,7 @@ def hadoop():
     # NOTE: must set CLASSPATH to connect using pyarrow.fs.HadoopFileSystem
     result = subprocess.run(
         [f"{hadoop_home}/bin/hdfs", "classpath", "--glob"],
-        universal_newlines=True,
+        text=True,
         stdout=subprocess.PIPE,
         check=False,
     )
@@ -95,10 +95,8 @@ def hdfs_server(
             return False
 
     try:
-        docker_services.wait_until_responsive(
-            timeout=30.0, pause=5, check=_check
-        )
-    except Exception:  # pylint: disable=broad-except
+        docker_services.wait_until_responsive(timeout=30.0, pause=5, check=_check)
+    except Exception:  # noqa: BLE001
         pytest.skip("couldn't start hdfs server")
 
     return {"hdfs": port, "webhdfs": web_port}
@@ -108,7 +106,7 @@ def hdfs_server(
 def real_hdfs(hdfs_server):  # pylint: disable=redefined-outer-name
     port = hdfs_server["hdfs"]
     url = f"hdfs://127.0.0.1:{port}/{uuid.uuid4()}"
-    yield HDFS(url)
+    return HDFS(url)
 
 
 def md5md5crc32c(path):
@@ -133,9 +131,7 @@ def md5md5crc32c(path):
             crc_int = crc32c(block)
 
             # NOTE: hdfs is big-endian
-            crc_bytes = crc_int.to_bytes(
-                (crc_int.bit_length() + 7) // 8, "big"
-            )
+            crc_bytes = crc_int.to_bytes((crc_int.bit_length() + 7) // 8, "big")
 
             md5 = hashlib.md5(crc_bytes).digest()
 
@@ -237,9 +233,7 @@ def make_hdfs(mocker):
     pytest.importorskip("pyarrow.fs")
 
     mocker.patch("pyarrow.fs._not_imported", [])
-    mocker.patch(
-        "pyarrow.fs.HadoopFileSystem", FakeHadoopFileSystem, create=True
-    )
+    mocker.patch("pyarrow.fs.HadoopFileSystem", FakeHadoopFileSystem, create=True)
 
     mocker.patch("dvc_hdfs.HDFSFileSystem._checksum", hadoop_fs_checksum)
 
