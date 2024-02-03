@@ -3,10 +3,12 @@ import re
 import subprocess
 import sys
 import threading
+from typing import ClassVar
+
+from funcy import wrap_prop
 
 from dvc.utils.objects import cached_property
 from dvc_objects.fs.base import FileSystem
-from funcy import wrap_prop
 
 CHECKSUM_REGEX = re.compile(r".*\t.*\t(?P<checksum>.*)")
 
@@ -26,7 +28,7 @@ def fix_env():
 # pylint: disable=abstract-method
 class HDFSFileSystem(FileSystem):
     protocol = "hdfs"
-    REQUIRES = {"fsspec": "fsspec", "pyarrow": "pyarrow"}
+    REQUIRES: ClassVar[dict[str, str]] = {"fsspec": "fsspec", "pyarrow": "pyarrow"}
     PARAM_CHECKSUM = "checksum"
 
     @classmethod
@@ -93,7 +95,7 @@ class HDFSFileSystem(FileSystem):
         executable = os.getenv("SHELL") if os.name != "nt" else None
         p = subprocess.Popen(
             cmd,
-            shell=True,
+            shell=True,  # noqa: S602
             close_fds=close_fds,
             executable=executable,
             env=env or os.environ,
@@ -105,5 +107,4 @@ class HDFSFileSystem(FileSystem):
 
         if p.returncode != 0:
             raise subprocess.CalledProcessError(p.returncode, cmd, out, err)
-        else:
-            return out.decode("utf-8")
+        return out.decode("utf-8")
