@@ -95,7 +95,7 @@ class HDFSFileSystem(FileSystem):
         executable = os.getenv("SHELL") if os.name != "nt" else None
         p = subprocess.Popen(
             cmd,
-            shell=True,  # noqa: S602
+            shell=True,
             close_fds=close_fds,
             executable=executable,
             env=env or os.environ,
