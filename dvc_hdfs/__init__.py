@@ -93,7 +93,7 @@ class HDFSFileSystem(FileSystem):
         close_fds = os.name != "nt"
 
         executable = os.getenv("SHELL") if os.name != "nt" else None
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # noqa: S602
             cmd,
             shell=True,
             close_fds=close_fds,
