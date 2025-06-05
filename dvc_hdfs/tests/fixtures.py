@@ -1,4 +1,6 @@
 import os
+import platform
+import subprocess
 import uuid
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -14,6 +16,97 @@ _hdfs_root = TemporaryDirectory()
 @pytest.fixture(scope="session")
 def docker_compose_file():
     return os.path.join(os.path.dirname(__file__), "docker-compose.yml")
+
+
+@pytest.fixture(scope="session")
+def hadoop():
+    pytest.importorskip("pyarrow.fs")
+    if platform.system() != "Linux":
+        pytest.skip("only supported on Linux")
+
+    import wget
+    from appdirs import user_cache_dir
+
+    hadoop_name = "hadoop-2.7.2.tar.gz"
+    java_name = "openjdk-7u75-b13-linux-x64-18_dec_2014.tar.gz"
+
+    base_url = "https://s3-us-east-2.amazonaws.com/dvc-public/dvc-test/"
+    hadoop_url = base_url + hadoop_name
+    java_url = base_url + java_name
+
+    (cache_dir,) = (user_cache_dir("dvc-test", "iterative"),)
+    dname = os.path.join(cache_dir, "hdfs")
+
+    java_tar = os.path.join(dname, java_name)
+    hadoop_tar = os.path.join(dname, hadoop_name)
+
+    java_home = os.path.join(dname, "java-se-7u75-ri")
+    hadoop_home = os.path.join(dname, "hadoop-2.7.2")
+
+    def _get(url, tar, target):
+        if os.path.isdir(target):
+            return
+
+        if not os.path.exists(tar):
+            wget.download(url, out=tar)
+        assert os.system(f"tar -xvf {tar} -C {dname}") == 0
+        assert os.path.isdir(target)
+
+    os.makedirs(dname, exist_ok=True)
+    _get(hadoop_url, hadoop_tar, hadoop_home)
+    _get(java_url, java_tar, java_home)
+
+    os.environ["JAVA_HOME"] = java_home
+    os.environ["HADOOP_HOME"] = hadoop_home
+    os.environ["PATH"] += f":{hadoop_home}/bin:{hadoop_home}/sbin"
+
+    # NOTE: must set CLASSPATH to connect using pyarrow.fs.HadoopFileSystem
+    result = subprocess.run(
+        [f"{hadoop_home}/bin/hdfs", "classpath", "--glob"],
+        text=True,
+        stdout=subprocess.PIPE,
+        check=False,
+    )
+    os.environ["CLASSPATH"] = result.stdout
+
+
+@pytest.fixture(scope="session")
+def hdfs_server(
+    hadoop,  # pylint: disable=redefined-outer-name,unused-argument
+    docker_services,
+):
+    import pyarrow.fs
+
+    port = docker_services.port_for("hdfs", 8020)
+    web_port = docker_services.port_for("hdfs", 50070)
+
+    def _check():
+        try:
+            # NOTE: just connecting or even opening something is not enough,
+            # we need to make sure that we are able to write something.
+            conn = pyarrow.fs.HadoopFileSystem("hdfs://127.0.0.1", port)
+            with conn.open_output_stream(str(uuid.uuid4())) as fobj:
+                fobj.write(b"test")
+            return True
+        except (pyarrow.ArrowException, OSError):
+            import traceback
+
+            traceback.print_exc()
+            return False
+
+    try:
+        docker_services.wait_until_responsive(timeout=30.0, pause=5, check=_check)
+    except Exception:  # noqa: BLE001
+        pytest.skip("couldn't start hdfs server")
+
+    return {"hdfs": port, "webhdfs": web_port}
+
+
+@pytest.fixture
+def real_hdfs(hdfs_server):  # pylint: disable=redefined-outer-name
+    port = hdfs_server["hdfs"]
+    url = f"hdfs://127.0.0.1:{port}/{uuid.uuid4()}"
+    return HDFS(url)
 
 
 def md5md5crc32c(path):
